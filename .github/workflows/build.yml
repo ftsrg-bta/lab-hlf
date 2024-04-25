@@ -4,29 +4,33 @@ jobs:
 
   build-docs:
     runs-on: ubuntu-latest
-    name: Render and upload docs
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Install packages
-      run: |
-        sudo apt-get install -qq -y \
-          pandoc \
-          texlive-base \
-          texlive-science \
-          texlive-xetex \
-          texlive-fonts-recommended \
-          texlive-latex-extra \
-          lmodern
+      run: >
+        sudo apt-get install -qq -y
+        asciidoctor
+        ruby-asciidoctor-pdf ruby-rouge
+    - name: Prepare results directory
+      run: mkdir out
     - name: Build guide.html
-      run: pandoc guide.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=guide.html --css=pandoc.css --standalone --self-contained
+      run: >
+        asciidoctor
+        --quiet
+        --backend html
+        --destination-dir out
+        --attribute webfonts!
+        --attribute stylesheet=style.css
+        guide.adoc
     - name: Build guide.pdf
-      run: pandoc guide.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=guide.pdf -V geometry:margin=1in -V urlcolor:blue --highlight-style breezedark
-    - name: Collect results for deployment
-      run: |
-        mkdir out
-        cp *.html out/
-        cp *.pdf out/
+      run: >-
+        asciidoctor
+        --quiet
+        --require asciidoctor-pdf
+        --backend pdf
+        --destination-dir out
+        guide.adoc
     - name: Upload artefacts
       uses: actions/upload-pages-artifact@v3
       with:
