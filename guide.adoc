@@ -3,6 +3,7 @@ Bertalan Zoltán Péter, Dr. Imre Kocsis
 2024-04-25
 :experimental:
 :icons: font
+:source-highlighter: rouge
 :imagesdir: img/
 :toc: left
 :tabs-sync-option:
