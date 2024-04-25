@@ -20,12 +20,8 @@ jobs:
           lmodern
     - name: Build guide.html
       run: pandoc guide.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=guide.html --css=pandoc.css --standalone --self-contained
-    - name: Build vulnerabilities.html
-      run: pandoc vulnerabilities.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=vulnerabilities.html --css=pandoc.css --standalone --self-contained
     - name: Build guide.pdf
       run: pandoc guide.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=guide.pdf -V geometry:margin=1in -V urlcolor:blue --highlight-style breezedark
-    - name: Build vulnerabilities.pdf
-      run: pandoc vulnerabilities.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=vulnerabilities.pdf -V geometry:margin=1in -V urlcolor:blue
     - name: Collect results for deployment
       run: |
         mkdir out
