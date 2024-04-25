@@ -1,7 +1,7 @@
 = Hyperledger Fabric Chaincode Development Quick Guide
 Bertalan Zoltán Péter, Dr. Imre Kocsis
 2024-04-25
-:icons:
+:icons: font
 :imagesdir: img/
 :toc: left
 :tabs-sync-option:
