@@ -35,7 +35,7 @@ In reality, we usually simply refer the HLF smart contracts as _chaincode._
 
 The figure below offers an overview of transaction simulation.
 
-image::img/transaction-simulation.png[Transaction Simulation in Hyperledger Fabric]
+image::transaction-simulation.png[Transaction Simulation in Hyperledger Fabric]
 
 Take note of the _Chaincode stub API_ element on the diagram.
 The chaincode software uses this stub to interact with the ledger (ie, to read and write keys).

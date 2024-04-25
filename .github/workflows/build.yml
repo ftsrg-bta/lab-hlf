@@ -22,7 +22,6 @@ jobs:
         --require asciidoctor-tabs
         --backend html
         --destination-dir out
-        --attribute webfonts!
         --attribute stylesheet=style.css
         guide.adoc
     - name: Build guide.pdf
