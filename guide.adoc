@@ -40,6 +40,7 @@ The chaincode software uses this stub to interact with the ledger (ie, to read a
 These operations take place via the _Ledger API,_ but this is normally not visible from the chaincode side.
 
 HLF supports three general-purpose programming languages for writing chaincode:
+
 * NodeJS (→ JavaScript or TypeScript)
 * Java
 * Go
@@ -48,7 +49,7 @@ Theoretically, any language can be used, provided a stub implementation.
 The HLF project provides SDKs for these three languages.
 Refer to the {url-fabric-docs}/sdk_chaincode.html[Fabric Contract APIs and Application SDKs] page in HLF’s documentation for more details, API descriptions, and documentation.
 
-INFO: The HLF platform is actively developed.
+NOTE: The HLF platform is actively developed.
 There may be changes to how chaincode is written in the future, the APIs and libraries may change, etc.
 This guide has been written for {url-fabric-docs}[**HLF v2.5**] (the latest as of 2024-04-25).
 
@@ -66,7 +67,7 @@ Since it is relatively complicated to start up a local development network to te
 Unlike some of its predecessors (such as https://github.com/hyperledger-labs/microfab[Microfab]), Fablo does not attempt to run all of HLF’s components (peers, orderers, etc) in a single Docker container.
 Rather, it takes care of setting up a ‘full-fledged’ HLF network based on a network specification (provided as a configuration file) with a single command.
 
-INFO: This tutorial is based on the https://github.com/hyperledger-labs/fablo/releases/tag/1.2.0[**1.2.0**] release of Fablo.
+NOTE: This tutorial is based on the https://github.com/hyperledger-labs/fablo/releases/tag/1.2.0[**1.2.0**] release of Fablo.
 
 === Getting Started with Fablo
 
@@ -121,9 +122,11 @@ You can start your network with 'fablo up' command
 ----
 
 This `init` command primarily generates a `fablo-config.json` file – this is the network specification.
-`node` and `rest` are optional parameters:
+
+.`node` and `rest` are optional parameters:
 * `node` asks Fablo to also create an initial NodeJS chaincode sample (which appears under `chaincodes/chaincode-kv-node/`);
 * `rest` instructs Fablo to enable its REST API endpoint in the network configuration – more on this later.
+
 There is also the `dev` parameter that enables {url-fabric-docs}/peer-chaincode-devmode.html[development mode] on the network peers.
 
 
