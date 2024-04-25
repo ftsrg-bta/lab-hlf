@@ -27,7 +27,6 @@ jobs:
         mkdir out
         cp *.html out/
         cp *.pdf out/
-        cp -R contracts/ out/contracts/
     - name: Upload artefacts
       uses: actions/upload-pages-artifact@v3
       with:
