@@ -265,10 +265,9 @@ In this guide, we provide command line examples, but there is also a short guide
 Fablo REST defines a number of endpoints, but this guide only covers those used to invoke chaincode.
 Refer to {url-fablo-rest}[Fablo REST’s README] for information regarding the other endpoints.
 
+.Using the Insomnia HTTP Client (click to open)
 [%collapsible,#insomnia]
 ========
-===== Using the Insomnia HTTP Client
-
 {url-insomnia}[Insomnia] is a cross-platform graphical HTTP client (among others).
 Install Insomnia based on {url-insomnia-docs}/install[its documentation].
 
@@ -285,8 +284,8 @@ Create a new project of type _Request collection._
 Then proceed to configure the environment variables.
 This is optional, but can greatly improve efficiency when using the client.
 
-====== Setting up the Environment
-
+.Setting up the Environment
+--
 To edit the environment, click on the gear icon:gear icon.
 
 The environment is a simple JSON file – each key-value pair is a variable.
@@ -322,9 +321,10 @@ You will be able to use the same templating in the definitions of your requests.
 
 NOTE: It is useful to know that you can also create _Sub Environments._
 This allows you to override some values (or add some additional specific ones) to be used in certain contexts.
+--
 
-====== Adding Requests
-
+.Adding Requests
+--
 Just click on the plus icon:circle-plus icon and select _HTTP Request._
 You can now edit the request’s parameters in the other pane.
 
@@ -355,9 +355,10 @@ Try submitting the request using the _Send_ button.
 Examine the output pane.
 
 You should also name your request to something more descriptive than _New Request._
+--
 
-====== Setting Up a Dynamic Global Header
-
+.Setting Up a Dynamic Global Header
+--
 Now that you have configured the request that can give you a token, you can configure a dynamically handled global header that will always contain a valid token.
 Go back to the environment configuration and add the `GLOBAL_HEADERS` structure if you have not done so already.
 
@@ -367,12 +368,14 @@ Then, simply click on the highlighted block that appears and you will be able to
 You can select the enroll request you just created.
 To extract the token, simply set the filter to `$.token` (a https://jsonpath.com/[JSONPath] expression).
 We recommend setting the _Trigger Behavior_ value to _When Expired_ with a max age of 60 seconds.
+--
 
-====== Adding other requests
-
+.Adding other requests
+--
 Once the global header has been set up, you can quickly create requests to invoke the chaincode without worrying about anything else other than the METHOD/URL (will always be `POST` and `/invoke/<channel-id>/<chaincode-id>` or `/query/<channel-id>/<chaincode-id>`) and the request body.
 
 To learn more about Insomnia, visit the {url-insomnia-docs}[docs].
+--
 ========
 
 [#auth]
