@@ -1,0 +1,10 @@
+= Hyperledger Fabric Lab
+
+image::https://github.com/ftsrg-bta/lab-ethereum/workflows/.github/workflows/build.yml/badge.svg[.github/workflows/build.yml]
+
+Materials for the Hyperledger Fabric hands-on lecture of the Blockchain course.
+
+.Latest documents
+* HLF Guide
+  https://ftsrg-bta.github.io/lab-hlf/guide.html[[html]]
+  https://ftsrg-bta.github.io/lab-hlf/guide.pdf[[pdf]]

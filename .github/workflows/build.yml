@@ -1,0 +1,53 @@
+on: [push]
+
+jobs:
+
+  build-docs:
+    runs-on: ubuntu-latest
+    name: Render and upload docs
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install packages
+      run: |
+        sudo apt-get install -qq -y \
+          pandoc \
+          texlive-base \
+          texlive-science \
+          texlive-xetex \
+          texlive-fonts-recommended \
+          texlive-latex-extra \
+          lmodern
+    - name: Build guide.html
+      run: pandoc guide.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=guide.html --css=pandoc.css --standalone --self-contained
+    - name: Build vulnerabilities.html
+      run: pandoc vulnerabilities.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=vulnerabilities.html --css=pandoc.css --standalone --self-contained
+    - name: Build guide.pdf
+      run: pandoc guide.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=guide.pdf -V geometry:margin=1in -V urlcolor:blue --highlight-style breezedark
+    - name: Build vulnerabilities.pdf
+      run: pandoc vulnerabilities.md --from=markdown_github-hard_line_breaks+yaml_metadata_block --output=vulnerabilities.pdf -V geometry:margin=1in -V urlcolor:blue
+    - name: Collect results for deployment
+      run: |
+        mkdir out
+        cp *.html out/
+        cp *.pdf out/
+        cp -R contracts/ out/contracts/
+    - name: Upload artefacts
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: out/
+
+  deploy-docs:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build-docs
+    runs-on: ubuntu-latest
+    name: Deploy to GH Pages
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy materials to GH Pages
+      uses: actions/deploy-pages@v4
