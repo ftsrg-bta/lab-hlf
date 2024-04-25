@@ -1,8 +1,534 @@
 = Hyperledger Fabric Chaincode Development Quick Guide
 Bertalan Zoltán Péter, Dr. Imre Kocsis
 2024-04-25
+:icons:
+:imagesdir: img/
+:toc: left
+:tabs-sync-option:
+:url-fabric-docs: https://hyperledger-fabric.readthedocs.io/en/release-2.5
+:url-fablo: https://github.com/hyperledger-labs/fablo
+:url-fablo-rest: https://github.com/fablo-io/fablo-rest
+:url-insomnia: https://insomnia.rest/
+:url-insomnia-docs: https://docs.insomnia.rest/insomnia
+:url-npmjs-package: https://www.npmjs.com/package
+:url-js-api: https://hyperledger.github.io/fabric-chaincode-node/main/api
 
-This is a supplementary guide for the https://www.mit.bme.hu/oktatas/targyak/vimiav17[Blockchain Technologies and Applications (VIMIAV17)] course at the http://www.bme.hu/?language=en[Budapest University of Technology and Economics].
-The purpose of this document is to give a brief introduction into developing smart contracts (chaincode) for the https://hyperledger-fabric.readthedocs.io/en/latest/index.html[Hyperledger Fabric] blockchain platform.
+This is a supplementary guide for the https://www.mit.bme.hu/oktatas/targyak/vimiav17[Blockchain Technologies and Applications (`VIMIAV17`)] course at the http://www.bme.hu/?language=en[Budapest University of Technology and Economics].
+The purpose of this document is to give a brief introduction into developing smart contracts (chaincode) for the {url-fabric-docs}/index.html[Hyperledger Fabric] blockchain platform.
 The guide demonstrates development using Typescript, but note that there are other supported languages you can use.
 For more information, please follow the links in the document.
+
+
+== Recap: Hyperledger Fabric Smart Contracts
+
+HLF is an _execute-order-validate_ blockchain.
+Transactions submitted by clients are first _simulated_ by peers, during which real ledger updates occur.
+The simulation results in a _read-write set_ that is returned to the client.
+Later, the client turns to the ordering service with its transaction endorsements (which include the corresponding read-write sets).
+Only after the ordering service generates a block with the transactions does the ledger get updated (unless the transactions is rejected due to an MVCC conflict).
+
+In HLF, smart contracts are written in **chaincode.**
+To be rigorous, _smart contracts_ govern transactions and _chaincode_ governs how smart contracts are packaged; ie, a piece of chaincode includes the definitions of one or more smart contracts.
+In reality, we usually simply refer the HLF smart contracts as _chaincode._
+
+The figure below offers an overview of transaction simulation.
+
+image::img/transaction-simulation.png[Transaction Simulation in Hyperledger Fabric]
+
+Take note of the _Chaincode stub API_ element on the diagram.
+The chaincode software uses this stub to interact with the ledger (ie, to read and write keys).
+These operations take place via the _Ledger API,_ but this is normally not visible from the chaincode side.
+
+HLF supports three general-purpose programming languages for writing chaincode:
+* NodeJS (→ JavaScript or TypeScript)
+* Java
+* Go
+
+Theoretically, any language can be used, provided a stub implementation.
+The HLF project provides SDKs for these three languages.
+Refer to the {url-fabric-docs}/sdk_chaincode.html[Fabric Contract APIs and Application SDKs] page in HLF’s documentation for more details, API descriptions, and documentation.
+
+INFO: The HLF platform is actively developed.
+There may be changes to how chaincode is written in the future, the APIs and libraries may change, etc.
+This guide has been written for {url-fabric-docs}[**HLF v2.5**] (the latest as of 2024-04-25).
+
+.Useful links and further reading (from HLF’s documentation)
+* {url-fabric-docs}/blockchain.html[Hyperledger Fabric Introduction]
+* {url-fabric-docs}/smartcontract/smartcontract.html[Smart Contracts and Chaincode]
+* {url-fabric-docs}/chaincode_lifecycle.html[Chaincode Lifecycle]
+
+
+== Running a Test Network with Fablo
+
+Since it is relatively complicated to start up a local development network to test your chaincode (compared to, say, Ethereum, where you can essentially just run a single client binary such as `geth` and be done), several tools have been developed over the years that help developers set up simple dev environments.
+
+{url-fablo}[Fablo] is a currently well-maintained tool that falls into this category.
+Unlike some of its predecessors (such as https://github.com/hyperledger-labs/microfab[Microfab]), Fablo does not attempt to run all of HLF’s components (peers, orderers, etc) in a single Docker container.
+Rather, it takes care of setting up a ‘full-fledged’ HLF network based on a network specification (provided as a configuration file) with a single command.
+
+INFO: This tutorial is based on the https://github.com/hyperledger-labs/fablo/releases/tag/1.2.0[**1.2.0**] release of Fablo.
+
+=== Getting Started with Fablo
+
+.Preqrequisites
+* A Linux/UNIX environment and a command prompt (shell)
+* Docker
+
+==== Get Fablo
+
+Fablo itself has been partially written in TypeScript, but normally runs in Docker, so you do not need to worry about its internals.
+Its frontend is a bash script that takes care of downloading the right Fablo Docker image and communicating with it.
+You only ever need to run the bash script to interact with Fablo.
+
+You do need to have this script, however.
+We recommend downloading it into your project directory (but global installs are also possible):
+
+[,console]
+----
+$ curl -Lf https://github.com/hyperledger-labs/fablo/releases/download/1.2.0/fablo.sh -o ./fablo && chmod +x ./fablo
+----
+
+(You may need to install cURL before running this command)
+
+==== Initalize a Network
+
+You can now **initialize a new Fablo network:**
+
+[,console]
+----
+$ ./fablo init node rest
+
+┌──────      .─.       ┌─────.    ╷           .────.
+│           /   \      │      │   │         ╱        ╲
+├─────     /     \     ├─────:    │        │          │
+│         /───────\    │      │   │         ╲        ╱
+╵        /         \   └─────'    └──────     '────'                      v1.2.0
+┌┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┐
+│ https://fablo.io | created at SoftwareMill | backed by Hyperledger Foundation│
+└┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘
+Creating sample Node.js chaincode
+   create chaincodes/chaincode-kv-node/index.js
+   create chaincodes/chaincode-kv-node/package-lock.json
+   create chaincodes/chaincode-kv-node/package.json
+   create chaincodes/chaincode-kv-node/.nvmrc
+   create fablo-config.json
+
+
+===========================================================
+Sample config file created! :)
+You can start your network with 'fablo up' command
+===========================================================
+----
+
+This `init` command primarily generates a `fablo-config.json` file – this is the network specification.
+`node` and `rest` are optional parameters:
+* `node` asks Fablo to also create an initial NodeJS chaincode sample (which appears under `chaincodes/chaincode-kv-node/`);
+* `rest` instructs Fablo to enable its REST API endpoint in the network configuration – more on this later.
+There is also the `dev` parameter that enables {url-fabric-docs}/peer-chaincode-devmode.html[development mode] on the network peers.
+
+
+==== Customize the Network (optional)
+
+Open `fablo-config.json` in an editor.
+
+.Some notable parameters:
+* You can enable {url-fabric-docs}/peer-chaincode-devmode.html[development mode] by setting `peerDevMode` to `true` in the `global` section.
+* By default, you get a single organization `Org1` and an ordering organization `Orderer`.
+* By default, `Org1` has two peers.
+You may want to change this to only one for simplicity.
+* Fablo’s REST API component can be enabled on an organization-level by setting `fabloRest` to `true` (under `tools`).
+* By default, there is a single channel with the two peers.
+If you change ``Org1``’s peer count to one, do not forget to also remove `peer1` from the channel.
+* If you have passed the `node` option to the `init` command, the file should also contain a chaincode definition for the sample chaincode.
+
+WARNING: In the latest version of Fablo (1.2.0), the `dev` option does not always seem to take effect.
+Make sure to check in `fablo-config.json` whether `peerDevMode` has been set to `true`.
+You should adjust this manually if needed.
+
+
+==== Run the Network
+
+To spin up the test network, simply execute
+
+[,console]
+----
+$ ./fablo up
+----
+
+This may take a few moments as Fablo will prepare cryptographic material (ie, certificates) and configuration files, download the Docker images for the HLF binaries (for the peers and orderers), bootstrap the network, set up a channel, and install all chaincode defined in the spec.
+
+If everything goes well, you should have a number of Docker containers running and a new `fablo-target/` directory.
+
+[,console]
+----
+$ docker ps
+IMAGE                            NAMES                                 PORTS
+hyperledger/fabric-peer:2.5      peer0.org1.example.com                0.0.0.0:7041->7041/tcp, 7051/tcp, 0.0.0.0:8541->7050/tcp, 0.0.0.0:8041->9440/tcp
+hyperledger/fabric-tools:2.5     cli.orderer.example.com
+hyperledger/fabric-tools:2.5     cli.org1.example.com
+hyperledger/fabric-ca:1.5.5      ca.org1.example.com                   0.0.0.0:7040->7054/tcp
+hyperledger/fabric-orderer:2.5   orderer0.group1.orderer.example.com   0.0.0.0:7030->7030/tcp, 7050/tcp, 0.0.0.0:8030->9440/tcp
+softwaremill/fablo-rest:0.1.0    fablo-rest.org1.example.com           0.0.0.0:8801->8000/tcp
+hyperledger/fabric-ca:1.5.5      ca.orderer.example.com                0.0.0.0:7020->7054/tcp
+
+$ ls -l ./ fablo-target/
+./:
+total 16
+drwxrwxrwx 1 user user 4096 Apr 25 14:13 chaincodes
+-rwxrwxrwx 1 user user 9462 Apr 25 14:12 fablo
+-rwxrwxrwx 1 user user 1058 Apr 25 14:29 fablo-config.json
+drwxrwxrwx 1 user user 4096 Apr 25 14:29 fablo-target
+
+fablo-target/:
+total 4
+drwxrwxrwx 1 user user 4096 Apr 25 14:30 fabric-config
+drwxrwxrwx 1 user user 4096 Apr 25 14:30 fabric-docker
+-rwxrwxrwx 1 user user 1792 Apr 25 14:29 fabric-docker.sh
+drwxrwxrwx 1 user user 4096 Apr 25 14:30 hooks
+----
+
+****
+The `fablo-target/` directory contains everything needed for this network instance.
+If you just wanted to generate a network once and then only run it, you could just deploy the contents of this directory.
+This is not normally the use case for testing; rather, we want a ‘throwaway’ network that can be regenarated at any time.
+****
+
+WARNING: Usually, you would only use `fablo up` the very first time you spin up the network.
+Later, you can use `fablo stop` and `fablo start` to stop and start the containers respectively (retaining configuration).
+If you wish to scrap the network and start from scratch, you can use `fablo recreate`.
+`fablo up` will not work if there is already a `fablo-target/` directory generated.
+
+==== Run the Chaincode
+
+If you have opted to use {url-fabric-docs}/peer-chaincode-devmode.html[development mode], you are responsible for running the chaincode (otherwise, the peer would control the lifecycle of the chaincode).
+This is actually usefule, since you will be able to hot-reload the chaincode after any changes.
+We recommend developing your chaincode in dev mode.
+
+To run the NodeJS chaincode generated by `fablo init`, navigate to the `chaincode-kv-node/` directory and use a Node package manager (such as https://www.npmjs.com/[`npm`] or https://pnpm.io/[`pnpm`]) to install the dependencies and run the chaincode:
+
+[,console]
+----
+$ pnpm install
+
+$ pnpm run start:watch
+
+> chaincode-kv-node@0.2.0 start:watch chaincodes/chaincode-kv-node
+> nodemon --exec "npm run start:dev"
+
+[nodemon] 2.0.22
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,json
+[nodemon] starting `npm run start:dev`
+
+> chaincode-kv-node@0.2.0 start:dev
+> fabric-chaincode-node start --peer.address "127.0.0.1:8541" --chaincode-id-name "chaincode1:0.0.1" --tls.enabled false
+
+2024-04-25T14:45:22.251Z info [c-api:contracts-spi/bootstrap.js]
+      No metadata file supplied in contract, introspection will generate all the data
+2024-04-25T14:45:22.326Z info [c-api:lib/handler.js]
+      Creating new Chaincode Support Client for peer comminications
+2024-04-25T14:45:22.331Z info [c-api:lib/chaincode.js]
+      Registering with peer 127.0.0.1:8541 as chaincode "chaincode1:0.0.1"
+2024-04-25T14:45:22.336Z info [c-api:fabric-shim/cli]
+      Bootstrap process completed
+2024-04-25T14:45:22.390Z info [c-api:lib/handler.js]
+      Successfully registered with peer node. State transferred to "established"
+2024-04-25T14:45:22.391Z info [c-api:lib/handler.js]
+      Successfully established communication with peer node. State transferred to "ready"
+----
+
+NOTE: In the default `package.json` generated by `fablo init`, there is a ‘simple’ `start` script as well as a `start:watch` command.
+The latter is preferable as it will use `nodemon` to restart the server every time you change something in the JavaScript code.
+
+==== Interact with the Network Using Fablo REST
+
+{url-fablo-rest}[Fablo REST] is a complementing project to Fablo that provides a simple REST API for the network.
+Using Fablo REST, you can use HTTP requests for common operations instead of having to invoke Fabric’s binaries with the right parameters.
+
+If you have supplied the `rest` option during `fablo init` (or have manually set `tools.fabloRest` to `true` in `fablo-config.json`), you should have a container running the `softwaremill/fablo-rest` Docker image for every organization where Fablo REST was enabled.
+You will need to check what port has been mapped for this container.
+In the example output above, Fablo REST can be reached on the **8801** TCP port.
+
+Pick your HTTP client.
+The most basic approach is to simply use cURL on the command line.
+Note, however, that cURL requests can get quite verbose and you may need to do a lot of string escaping when passing JSON bodies.
+A more friendly CLI option is https://httpie.io/[HTTPie].
+If you prefer GUIs, you can use https://www.postman.com/[Postman] or {url-insomnia}[Insomnia].
+In this guide, we provide command line examples, but there is also a short guide to using Insomnia <<insomnia,later>>.
+
+Fablo REST defines a number of endpoints, but this guide only covers those used to invoke chaincode.
+Refer to {url-fablo-rest}[Fablo REST’s README] for information regarding the other endpoints.
+
+[#insomnia,%collapsible]
+========
+===== Using the Insomnia HTTP Client
+
+{url-insomnia}[Insomnia] is a cross-platform graphical HTTP client (among others).
+Install Insomnia based on {url-insomnia-docs}/install[its documentation].
+
+[TIP]
+====
+We highly recommend also installing the https://insomnia.rest/plugins/insomnia-plugin-global-headers[Global Headers] plugin.
+You can install it from within Insomnia itself by opening "Application > Preferences" and searching for it in the _Plugins_ tab (the package name is `insomnia-plugin-global-headers`).
+
+This plugin facilitates setting up global HTTP header values that are automatically added to each request in a given context.
+This is very useful when using Fablo as you will have to pass `Authorization` headers to every meaningful request as described in <<auth>>.
+====
+
+Create a new project of type _Request collection._
+Then proceed to configure the environment variables.
+This is optional, but can greatly improve efficiency when using the client.
+
+====== Setting up the Environment
+
+To edit the environment, click on the gear icon:gear icon.
+
+The environment is a simple JSON file – each key-value pair is a variable.
+
+If you use the Global Headers plugin, you can use a special `GLOBAL_HEADERS` key where the value is a nested key-value map of header names and values.
+You will be able to configure the authorization token required by Fablo here (→ <<auth>>), but first we have to add the corresponding request to the collection.
+
+You can also set variables for the host name and port where Fablo REST listens.
+Here is an example configuration (do not worry about the `GLOBAL_HEADERS` part too much just yet):
+
+[,json]
+----
+{
+  "host": "localhost",
+  "port": "8801",
+  "schema": "http",
+  "base_url": "{{ _.schema }}://{{ _.host }}:{{ _.port }}",
+  "channel_id": "channel1",
+  "chaincode_id": "asset-transfer",
+  "admin_user": "admin",
+  "admin_pass": "adminpw",
+  "enroll_endpoint": "{{ _.base_url }}/user/enroll",
+  "invoke_endpoint": "{{ _.base_url }}/invoke/{{ _.channel_id }}/{{ _.chaincode_id }}",
+  "query_endpoint": "{{ _.base_url }}/query/{{ _.channel_id }}/{{ _.chaincode_id }}",
+  "GLOBAL_HEADERS": {
+    "Authorization": "Bearer {% response 'body', 'req_70848386e1a8471c83c1450478f31f28', 'b64::JC50b2tlbg==::46b', 'when-expired', 60 %}"
+  }
+}
+----
+
+Note that variable values can refer to other variables using https://mozilla.github.io/nunjucks/[Nunjucks] templating.
+You will be able to use the same templating in the definitions of your requests.
+
+NOTE: It is useful to know that you can also create _Sub Environments._
+This allows you to override some values (or add some additional specific ones) to be used in certain contexts.
+
+====== Adding Requests
+
+Just click on the plus icon:circle-plus icon and select _HTTP Request._
+You can now edit the request’s parameters in the other pane.
+
+First, select the HTTP method.
+We will begin with adding a request to the `/user/enroll` endpoint (see <<auth>>), which has to be a `GET`.
+
+Then, specify the endpoint.
+Normally, you would have to type the entire URL here, but using environment variables, you can just reference: `{{ enroll_endpoint }}`.
+
+TIP: Try kbd:[Ctrl+Space] when in the URL bar ☺
+
+Select "Body > JSON" and simply fill in the request body.
+For the enroll request, you would need the following:
+
+[,json]
+----
+{ "id": "admin", "secret": "adminpw" }
+----
+
+TIP: Do not worry about formatting, Insomnia can prettify your JSON for you!
+
+Note the _Auth_ and _Headers_ tabs as well.
+If you do not use `GLOBAL_HEADERS`, you would be able to specify a `Bearer` token by selecting "Auth > Bearer Token" (the _PREFIX_ value can stay empty).
+When using `GLOBAL_HEADERS`, there is no need to set this up for each request.
+Anyway, no authorization is needed for the `/user/enroll` endpoint.
+
+Try submitting the request using the _Send_ button.
+Examine the output pane.
+
+You should also name your request to something more descriptive than _New Request._
+
+====== Setting Up a Dynamic Global Header
+
+Now that you have configured the request that can give you a token, you can configure a dynamically handled global header that will always contain a valid token.
+Go back to the environment configuration and add the `GLOBAL_HEADERS` structure if you have not done so already.
+
+Once you type `"Authorization": "Bearer`, you can just use auto-complete (kbd:[Ctrl+Space]) to find the **function** that will dynamically set the token value.
+Start typing `response` and select `Response => Body Attribute` from the list.
+Then, simply click on the highlighted block that appears and you will be able to edit the function graphically.
+You can select the enroll request you just created.
+To extract the token, simply set the filter to `$.token` (a https://jsonpath.com/[JSONPath] expression).
+We recommend setting the _Trigger Behavior_ value to _When Expired_ with a max age of 60 seconds.
+
+====== Adding other requests
+
+Once the global header has been set up, you can quickly create requests to invoke the chaincode without worrying about anything else other than the METHOD/URL (will always be `POST` and `/invoke/<channel-id>/<chaincode-id>` or `/query/<channel-id>/<chaincode-id>`) and the request body.
+
+To learn more about Insomnia, visit the {url-insomnia-docs}[docs].
+========
+
+[#auth]
+===== Authorization
+
+You first have to **enroll** with a user and get a _Bearer_ token that will have to be passed along with the HTTP requests to invoke chaincode.
+
+INFO: The default admin user has the credentials `admin` / `adminpw` (_id_ / _secret_).
+You may simply use this user for testing.
+
+[tabs]
+======
+curl::
+[,console]
+----
+$ curl -d '{"id": "admin", "secret": "adminpw"}' localhost:8801/user/enroll
+{"token":"5abe5720-0308-11ef-801e-53f4aa9e6bd1-admin"}
+----
+
+httpie::
+[,console]
+----
+$ http -b localhost:8801/user/enroll id=admin secret=adminpw
+{ "token": "5abe5720-0308-11ef-801e-53f4aa9e6bd1-admin" }
+----
+======
+
+The value of `token` will have to be given to the chaincode invocation request in an `Authorization` HTTP header (like `Authorization: Bearer 5abe5720-0308-11ef-801e-53f4aa9e6bd1-admin`).
+
+If working on the command line, you can shorten the necessary commands by saving the token value to a variable.
+You have to install https://jqlang.github.io/jq/[jq] for this to work.
+
+[,console]
+----
+$ token="$(curl -sd '{"id": "admin", "secret": "adminpw"}' localhost:8801/user/enroll | jq -r .token)"
+----
+
+Later, you can just use `$token` to get the token’s value.
+
+===== Chaincode Invocation
+
+The invocation endpoint is `/invoke/<channel-id>/<chaincode-id>`.
+There is also the `/query/<channel-id>/<chaincode-id>` endpoint for identical requests but for read-only transactions.
+`<channel-id>` must match the channel name defined in your `fablo-config.json`.
+Similarly, `<chaincode-id>` must match the name set for the chaincode.
+In the default configuration generated by `fablo init`, the `channel-id` is `my-channel1` and the `chaincode-id` is `chaincode1`.
+
+The transaction to invoke and its arguments are passed in the request body with the following format:
+
+[,json]
+----
+{
+  "method": "nameOfTheTransaction",
+  "args": ["arg1", "arg2", "arg3"]
+}
+----
+
+Optionally, you can also set `"transient": {"key": "value", ...}` if you wish to pass {url-fabric-docs}/private-data/private-data.html[transient or private data].
+
+NOTE: All arguments must be strings.
+You parse other data types in the chaincode.
+
+Do not forget that an `Authorization` header is needed for these requests; refer to <<auth>> for more information.
+
+.Example Chaincode Invocation
+[tabs]
+======
+curl::
+[,console]
+----
+$ token="$(curl -sd '{"id": "admin", "secret": "adminpw"}' localhost:8801/user/enroll | jq -r .token)"
+
+$ curl -H "Authorization: Bearer $token" -d '{"method": "put", "args": ["testkey", "testvalue"]}' localhost:8801/invoke/my-channel1/chaincode1
+{"response":{"success":"OK"}}
+
+$ curl -H "Authorization: Bearer $token" -d '{"method": "get", "args": ["testkey"]}' localhost:8801/invoke/my-channel1/chaincode1
+{"response":{"success":"testvalue"}}
+----
+
+httpie::
+[,console]
+----
+$ token=$(http -b localhost:8801/user/enroll id=admin secret=adminpw | jq -r .token)
+
+$ http -b -A bearer -a "$token" localhost:8801/invoke/my-channel1/chaincode1 method=put args:='["testkey", "testvalue"]'
+{ "response": { "success": "OK" } }
+
+$ http -b -A bearer -a "$token" localhost:8801/invoke/my-channel1/chaincode1 method=get args:='["testkey"]'
+{ "response": { "success": "testvalue" } }
+----
+======
+
+
+== Writing Chaincode in JavaScript
+
+This minimal guide will only cover the basics.
+You can take inspiration from the `chaincode-kv-node` example generated by `fablo-init`.
+
+You will need to add some dependencies to your NodeJS package (`pnpm add`):
+
+.Dependencies
+* {url-npmjs-package}/fabric-contract-api[`fabric-contract-api`]
+* {url-npmjs-package}/fabric-shim[`fabric-shim`]
+
+These dependencies provide the `Contract` class you will need to extend and the API using which you can interact with the ledger from your logic.
+Furthermore, they include the `fabric-chaincode-node` command used to run the chaincode (by you or the peer).
+
+The `start` script should be `fabric-chaincode-node-start`.
+If you want to use dev mode (and you should), you should also have a `start:dev` script.
+A more complete `package.json` example can be seen below.
+
+[,json]
+----
+{
+  "name": "chaincode-kv-node",
+  "version": "0.2.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "fabric-chaincode-node start",
+    "start:dev": "fabric-chaincode-node start --peer.address \"127.0.0.1:8541\" --chaincode-id-name \"chaincode1:0.0.1\" --tls.enabled false",
+    "start:watch": "nodemon --exec \"npm run start:dev\"",
+    "build": "echo \"No need to build the chaincode\"",
+  },
+  "author": "SoftwareMill",
+  "dependencies": {
+    "fabric-contract-api": "^2.4.2",
+    "fabric-shim": "^2.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.18"
+  }
+}
+----
+
+You can begin with the following skeleton in `index.js`:
+
+[,javascript]
+----
+const { Contract } = require('fabric-contract-api')
+
+class MyContract extends Contract {
+
+  async helloWorld(ctx, name) {
+    return { hello: name }
+  }
+}
+----
+
+=== Interacting with the Ledger
+
+Every function of the `Contract` class receives a `ctx` object (the {url-js-api}/fabric.contract.api.Context[`Context`]).
+Through the context you can access `stub` (type {url-js-api}/fabric-shim.ChaincodeStub[`ChaincodeStub`]) and `clientIdentity` (type {url-js-api}/fabric-shim.ClientIdentity[`ClientIdentity`]).
+
+Ledger interactions are possible through the `stub`.
+The main two functions are
+* `stub.getState(key)`
+* `stub.putState(key, value)`
+
+Refer to {url-js-api}/fabric-shim.ChaincodeStub[the documentation] for more details and other functions (such as `stub.getStateByRange` to query multiple keys at once).
+
+NOTE: The result of `getState` is a byte array.
+You should it for being `null` or of length zero; these indicate that the key does not exist in the ledger.
+In simple cases, you can deserialize the `getState` result using `toString()`.
+When you persist keys using `putState`, you can use `Buffer.from(<value>)`.

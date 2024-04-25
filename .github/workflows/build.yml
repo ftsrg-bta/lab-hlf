@@ -7,17 +7,19 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Install packages
+    - name: Install Ubuntu packages
+      run: sudo apt-get install -qq -y asciidoctor
+    - name: Install Ruby gems
       run: >
-        sudo apt-get install -qq -y
-        asciidoctor
-        ruby-asciidoctor-pdf ruby-rouge
+        sudo gem install --prerelease
+        asciidoctor-pdf asciidoctor-tabs rouge
     - name: Prepare results directory
       run: mkdir out
     - name: Build guide.html
       run: >
         asciidoctor
         --quiet
+        --require asciidoctor-tabs
         --backend html
         --destination-dir out
         --attribute webfonts!
@@ -27,6 +29,7 @@ jobs:
       run: >-
         asciidoctor
         --quiet
+        --require asciidoctor-tabs
         --require asciidoctor-pdf
         --backend pdf
         --destination-dir out
