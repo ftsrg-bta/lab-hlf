@@ -265,7 +265,7 @@ In this guide, we provide command line examples, but there is also a short guide
 Fablo REST defines a number of endpoints, but this guide only covers those used to invoke chaincode.
 Refer to {url-fablo-rest}[Fablo REST’s README] for information regarding the other endpoints.
 
-[#insomnia,%collapsible]
+[%collapsible,#insomnia]
 ========
 ===== Using the Insomnia HTTP Client
 
