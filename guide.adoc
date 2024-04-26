@@ -270,7 +270,7 @@ Refer to {url-fablo-rest}[Fablo REST’s README] for information regarding the o
 .Using the Insomnia HTTP Client (click to open)
 [%collapsible,#insomnia]
 ========
-{url-insomnia}[Insomnia] image:logo-insomnia.svg[Insomnia,150,float="right",link={url-insomnia}] is a cross-platform graphical HTTP client (among others).
+{url-insomnia}[Insomnia] image:logo-insomnia.svg[Insomnia,75,float="right",link={url-insomnia}] is a cross-platform graphical HTTP client (among others).
 Install Insomnia based on {url-insomnia-docs}/install[its documentation].
 
 [TIP]
