@@ -91,10 +91,9 @@ We recommend downloading it into your project directory (but global installs are
 
 [,console]
 ----
+$ # (You may need to install cURL before running this command)
 $ curl -Lf https://github.com/hyperledger-labs/fablo/releases/download/1.2.0/fablo.sh -o ./fablo && chmod +x ./fablo
 ----
-
-(You may need to install cURL before running this command)
 
 ==== Initalize a Network
 
@@ -139,7 +138,7 @@ There is also the `dev` parameter that enables {url-fabric-docs}/peer-chaincode-
 
 Open `fablo-config.json` in an editor.
 
-.Some notable parameters:
+.Some comments
 * You can enable {url-fabric-docs}/peer-chaincode-devmode.html[development mode] by setting `peerDevMode` to `true` in the `global` section.
 * By default, you get a single organization `Org1` and an ordering organization `Orderer`.
 * By default, `Org1` has two peers.
@@ -413,7 +412,7 @@ You have to install https://jqlang.github.io/jq/[jq] for this to work.
 
 [,console]
 ----
-$ token="$(curl -sd '{"id": "admin", "secret": "adminpw"}' localhost:8801/user/enroll | jq -r .token)"
+$ token=$(curl -sd '{"id": "admin", "secret": "adminpw"}' localhost:8801/user/enroll | jq -r .token)
 ----
 
 Later, you can just use `$token` to get the token’s value.
@@ -534,12 +533,13 @@ Through the context you can access `stub` (type {url-js-api}/fabric-shim.Chainco
 
 Ledger interactions are possible through the `stub`.
 The main two functions are
+
 * `stub.getState(key)`
 * `stub.putState(key, value)`
 
 Refer to {url-js-api}/fabric-shim.ChaincodeStub[the documentation] for more details and other functions (such as `stub.getStateByRange` to query multiple keys at once).
 
 NOTE: The result of `getState` is a byte array.
-You should it for being `null` or of length zero; these indicate that the key does not exist in the ledger.
+You should check it for being `null` or of length zero; these indicate that the key does not exist in the ledger.
 In simple cases, you can deserialize the `getState` result using `toString()`.
 When you persist keys using `putState`, you can use `Buffer.from(<value>)`.
