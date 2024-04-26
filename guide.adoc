@@ -74,6 +74,10 @@ Rather, it takes care of setting up a ‘full-fledged’ HLF network based on a 
 
 NOTE: This tutorial is based on the https://github.com/hyperledger-labs/fablo/releases/tag/1.2.0[**1.2.0**] release of Fablo.
 
+WARNING: Be sure to use the currently maintained version of Fablo.
+You may also come across the https://github.com/fablo-io/fablo[`fablo.io/fablo`] repository, but Fablo is currently a Hyperledger Labs project.
+The correct repository is {url-fablo}[**`hyperledger-labs/fablo`**].
+
 === Getting Started with Fablo
 
 .Preqrequisites
