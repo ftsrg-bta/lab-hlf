@@ -6,6 +6,9 @@ v1.0, 2024-04-26
 :source-highlighter: rouge
 :imagesdir: img/
 :toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 2
 :tabs-sync-option:
 :url-fabric-docs: https://hyperledger-fabric.readthedocs.io/en/release-2.5
 :url-fablo: https://github.com/hyperledger-labs/fablo
@@ -69,7 +72,6 @@ Since it is relatively complicated to start up a local development network to te
 Unlike some of its predecessors (such as https://github.com/hyperledger-labs/microfab[Microfab]), Fablo does not attempt to run all of HLF’s components (peers, orderers, etc) in a single Docker container.
 Rather, it takes care of setting up a ‘full-fledged’ HLF network based on a network specification (provided as a configuration file) with a single command.
 
-
 NOTE: This tutorial is based on the https://github.com/hyperledger-labs/fablo/releases/tag/1.2.0[**1.2.0**] release of Fablo.
 
 === Getting Started with Fablo
@@ -96,7 +98,7 @@ $ curl -Lf https://github.com/hyperledger-labs/fablo/releases/download/1.2.0/fab
 
 ==== Initalize a Network
 
-You can now **initialize a new Fablo network:**
+You can now initialize a new Fablo network:
 
 [,console]
 ----
@@ -126,9 +128,9 @@ You can start your network with 'fablo up' command
 
 This `init` command primarily generates a `fablo-config.json` file – this is the network specification.
 
-.`node` and `rest` are optional parameters:
-* `node` asks Fablo to also create an initial NodeJS chaincode sample (which appears under `chaincodes/chaincode-kv-node/`);
-* `rest` instructs Fablo to enable its REST API endpoint in the network configuration – more on this later.
+.`node` and `rest` are optional parameters
+`node`:: asks Fablo to also create an initial NodeJS chaincode sample (which appears under `chaincodes/chaincode-kv-node/`);
+`rest`:: instructs Fablo to enable its REST API endpoint in the network configuration – more on this later.
 
 There is also the `dev` parameter that enables {url-fabric-docs}/peer-chaincode-devmode.html[development mode] on the network peers.
 
@@ -275,7 +277,7 @@ Install Insomnia based on {url-insomnia-docs}/install[its documentation].
 [TIP]
 ====
 We highly recommend also installing the https://insomnia.rest/plugins/insomnia-plugin-global-headers[Global Headers] plugin.
-You can install it from within Insomnia itself by opening "Application > Preferences" and searching for it in the _Plugins_ tab (the package name is `insomnia-plugin-global-headers`).
+You can install it from within Insomnia itself by opening menu:Application[Preferences] and searching for it in the btn:[Plugins] tab (the package name is `insomnia-plugin-global-headers`).
 
 This plugin facilitates setting up global HTTP header values that are automatically added to each request in a given context.
 This is very useful when using Fablo as you will have to pass `Authorization` headers to every meaningful request as described in <<auth>>.
@@ -287,7 +289,7 @@ This is optional, but can greatly improve efficiency when using the client.
 
 .Setting up the Environment
 --
-To edit the environment, click on the gear icon:gear icon.
+To edit the environment, click on the gear icon:gear[] icon.
 
 The environment is a simple JSON file – each key-value pair is a variable.
 
@@ -320,13 +322,13 @@ Here is an example configuration (do not worry about the `GLOBAL_HEADERS` part t
 Note that variable values can refer to other variables using https://mozilla.github.io/nunjucks/[Nunjucks] templating.
 You will be able to use the same templating in the definitions of your requests.
 
-NOTE: It is useful to know that you can also create _Sub Environments._
+TIP: It is useful to know that you can also create _Sub Environments._
 This allows you to override some values (or add some additional specific ones) to be used in certain contexts.
 --
 
 .Adding Requests
 --
-Just click on the plus icon:circle-plus icon and select _HTTP Request._
+Just click on the plus icon:circle-plus[] icon and select _HTTP Request._
 You can now edit the request’s parameters in the other pane.
 
 First, select the HTTP method.
@@ -337,7 +339,7 @@ Normally, you would have to type the entire URL here, but using environment vari
 
 TIP: Try kbd:[Ctrl+Space] when in the URL bar ☺
 
-Select "Body > JSON" and simply fill in the request body.
+Select menu:Body[JSON] and simply fill in the request body.
 For the enroll request, you would need the following:
 
 [,json]
@@ -348,11 +350,11 @@ For the enroll request, you would need the following:
 TIP: Do not worry about formatting, Insomnia can prettify your JSON for you!
 
 Note the _Auth_ and _Headers_ tabs as well.
-If you do not use `GLOBAL_HEADERS`, you would be able to specify a `Bearer` token by selecting "Auth > Bearer Token" (the _PREFIX_ value can stay empty).
+If you do not use `GLOBAL_HEADERS`, you would be able to specify a `Bearer` token by selecting menu:Auth[Bearer Token] (the _PREFIX_ value can stay empty).
 When using `GLOBAL_HEADERS`, there is no need to set this up for each request.
 Anyway, no authorization is needed for the `/user/enroll` endpoint.
 
-Try submitting the request using the _Send_ button.
+Try submitting the request using the btn:[Send] button.
 Examine the output pane.
 
 You should also name your request to something more descriptive than _New Request._
@@ -384,7 +386,7 @@ To learn more about Insomnia, visit the {url-insomnia-docs}[docs].
 
 You first have to **enroll** with a user and get a _Bearer_ token that will have to be passed along with the HTTP requests to invoke chaincode.
 
-INFO: The default admin user has the credentials `admin` / `adminpw` (_id_ / _secret_).
+IMPORTANT: The default admin user has the credentials `admin` / `adminpw` (_id_ / _secret_).
 You may simply use this user for testing.
 
 [tabs]
@@ -436,7 +438,7 @@ The transaction to invoke and its arguments are passed in the request body with 
 
 Optionally, you can also set `"transient": {"key": "value", ...}` if you wish to pass {url-fabric-docs}/private-data/private-data.html[transient or private data].
 
-NOTE: All arguments must be strings.
+IMPORTANT: All arguments must be strings.
 You parse other data types in the chaincode.
 
 Do not forget that an `Authorization` header is needed for these requests; refer to <<auth>> for more information.
