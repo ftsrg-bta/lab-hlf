@@ -23,7 +23,7 @@ For more information, please follow the links in the document.
 
 == Recap: Hyperledger Fabric Smart Contracts
 
-HLF is an _execute-order-validate_ blockchain.
+HLF image:logo-hlf.svg[Hyperledger Fabric,200,float="right",link={url-fabric-docs}] is an _execute-order-validate_ blockchain.
 Transactions submitted by clients are first _simulated_ by peers, during which real ledger updates occur.
 The simulation results in a _read-write set_ that is returned to the client.
 Later, the client turns to the ordering service with its transaction endorsements (which include the corresponding read-write sets).
@@ -65,9 +65,10 @@ This guide has been written for {url-fabric-docs}[**HLF v2.5**] (the latest as o
 
 Since it is relatively complicated to start up a local development network to test your chaincode (compared to, say, Ethereum, where you can essentially just run a single client binary such as `geth` and be done), several tools have been developed over the years that help developers set up simple dev environments.
 
-{url-fablo}[Fablo] is a currently well-maintained tool that falls into this category.
+{url-fablo}[Fablo] image:logo-fablo.svg[Fablo,200,float="right",link={url-fablo}] is a currently well-maintained tool that falls into this category.
 Unlike some of its predecessors (such as https://github.com/hyperledger-labs/microfab[Microfab]), Fablo does not attempt to run all of HLF’s components (peers, orderers, etc) in a single Docker container.
 Rather, it takes care of setting up a ‘full-fledged’ HLF network based on a network specification (provided as a configuration file) with a single command.
+
 
 NOTE: This tutorial is based on the https://github.com/hyperledger-labs/fablo/releases/tag/1.2.0[**1.2.0**] release of Fablo.
 
@@ -268,7 +269,7 @@ Refer to {url-fablo-rest}[Fablo REST’s README] for information regarding the o
 .Using the Insomnia HTTP Client (click to open)
 [%collapsible,#insomnia]
 ========
-{url-insomnia}[Insomnia] is a cross-platform graphical HTTP client (among others).
+{url-insomnia}[Insomnia] image:logo-insomnia[Insomnia,150,float="right",link={url-inomnia}] is a cross-platform graphical HTTP client (among others).
 Install Insomnia based on {url-insomnia-docs}/install[its documentation].
 
 [TIP]
