@@ -1,6 +1,6 @@
 = Hyperledger Fabric Chaincode Development Quick Guide
-Bertalan Zoltán Péter, Dr. Imre Kocsis
-2024-04-25
+Bertalan Zoltán Péter <bpeter@edu.bme.hu>, Dr. Imre Kocsis <kocsis.imre@vik.bme.hu>
+v1.0, 2024-04-26
 :experimental:
 :icons: font
 :source-highlighter: rouge
