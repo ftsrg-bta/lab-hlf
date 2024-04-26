@@ -33,7 +33,7 @@ jobs:
         --destination-dir out
         guide.adoc
     - name: Copy images to output dir
-      run: cp img/* out/
+      run: cp -R img/ out/
     - name: Upload artefacts
       uses: actions/upload-pages-artifact@v3
       with:
